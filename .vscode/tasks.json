@@ -1,0 +1,75 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "配置 (CMake Configure)",
+            "detail": "CMake 配置工程 (Debug)",
+            "type": "shell",
+            "command": "cmake --preset Debug",
+            "problemMatcher": []
+        },
+        {
+            "label": "编译 (Build)",
+            "detail": "增量编译固件",
+            "type": "shell",
+            "command": "cmake --build --preset Debug",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "清理 (Clean)",
+            "detail": "删除 build/ 目录（移动工程后使用）",
+            "type": "shell",
+            "command": "rm -rf build",
+            "problemMatcher": []
+        },
+        {
+            "label": "重新配置并编译 (Rebuild)",
+            "detail": "清理后重新 CMake 配置并全量编译",
+            "type": "shell",
+            "command": "rm -rf build && cmake --preset Debug && cmake --build --preset Debug",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "烧录 - DAPLink",
+            "detail": "仅烧录（不编译），使用 DAPLink",
+            "type": "shell",
+            "command": "openocd -f interface/cmsis-dap.cfg -f target/stm32f1x.cfg -c \"program build/Debug/firmware/firmware.elf verify reset exit\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "烧录 - ST-Link",
+            "detail": "仅烧录（不编译），使用 ST-Link",
+            "type": "shell",
+            "command": "openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c \"program build/Debug/firmware/firmware.elf verify reset exit\"",
+            "problemMatcher": []
+        },
+        {
+            "label": "编译并烧录 - DAPLink",
+            "detail": "先编译，成功后自动烧录 (DAPLink)",
+            "type": "shell",
+            "command": "openocd -f interface/cmsis-dap.cfg -f target/stm32f1x.cfg -c \"program build/Debug/firmware/firmware.elf verify reset exit\"",
+            "dependsOn": [
+                "编译 (Build)"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "编译并烧录 - ST-Link",
+            "detail": "先编译，成功后自动烧录 (ST-Link)",
+            "type": "shell",
+            "command": "openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c \"program build/Debug/firmware/firmware.elf verify reset exit\"",
+            "dependsOn": [
+                "编译 (Build)"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

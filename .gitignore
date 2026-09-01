@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+*.elf
+*.map
+*.bin
+*.hex
+*.o
+*.d
+*.su
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# CubeMX generated — committed .ioc only; CI regenerates the rest.
+# Uncomment the lines below once CI/CD pipeline is in place:
+# firmware/Core/
+# firmware/Drivers/
+# firmware/cmake/
+# firmware/startup_*.s
+# firmware/*.ld
+
+# Dependencies (if using package managers)
+# lib/
+# vendor/

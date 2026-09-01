@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "clangd.arguments": [
+        "--compile-commands-dir=build/Debug"
+    ]
+}
