@@ -32,6 +32,12 @@ string(REPLACE "${CMAKE_SOURCE_DIR}/STM32F103xx_FLASH.ld"
 # 'stm32cubemx' INTERFACE library that 'app' depends on.
 add_subdirectory(firmware)
 
+# printf() retarget to USART1 (overrides the weak _write() in CubeMX
+# syscalls.c). Compiled directly into the executable — as a static
+# library member it would be dropped, since nothing references
+# _write() until printf() itself is linked.
+target_sources(firmware PRIVATE application/src/retarget.c)
+
 # Custom drivers (static libraries, e.g. motor_ctrl)
 add_subdirectory(drivers)
 
@@ -47,3 +53,8 @@ add_subdirectory(application)
 # NOTE: Must use plain signature — CubeMX-generated cmake/stm32cubemx
 # also uses plain target_link_libraries, and CMake forbids mixing styles.
 target_link_libraries(firmware app m)
+
+# Enable %f support in printf()/snprintf() — newlib-nano omits float
+# formatting by default. Done here instead of firmware/ so the
+# CubeMX-generated files stay untouched.
+target_link_options(firmware PRIVATE -u _printf_float)

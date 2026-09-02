@@ -17,9 +17,12 @@
 #include "app.h"
 #include "main.h"            /* BSP defines: LED_Pin, LED_GPIO_Port */
 #include "stm32f1xx_hal.h"   /* HAL_Delay, HAL_GPIO_TogglePin */
+#include <stdio.h>           /* printf */
 
 #include "spwm.h"
 #include "tim.h"
+#include "usart.h"
+#include <stdio.h>
 /* Private Defines ------------------------------------------------------------*/
 
 #define BLINK_PERIOD_MS  500U   /* 500ms on, 500ms off → 1 Hz */
@@ -33,9 +36,9 @@ void app_init(void)
 {
     /* 顺序要求：先 init（启动 PWM、占空比 50%），再 start（拉高 EN），
      * 最后启动 TIM3 中断开始推进角度。 */
-    spwm_init();
-    HAL_TIM_Base_Start_IT(&htim3);
-    spwm_start(6.28f, 1.5f);   // 2 rad/s、1.5V，起步组合
+    // spwm_init();
+    // HAL_TIM_Base_Start_IT(&htim3);
+    // spwm_start(6.28f, 1.5f);   // 2 rad/s、1.5V，起步组合
 }
 
 /**
@@ -46,13 +49,14 @@ void app_init(void)
  * timer/scheduler to avoid wasting CPU cycles.
  */
 void app_run(void)
-{
-
+{     
+    printf("test %d %f\r\n", 123, 3.14f);
+    HAL_Delay(1000);
 }
 
 // TIM3 中断回调（全局只此一份，若已有 HAL_TIM_PeriodElapsedCallback 则在 TIM3 分支里加一行）：
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if (htim->Instance == TIM3) spwm_tick();
+    // if (htim->Instance == TIM3) spwm_tick();
 }
 
