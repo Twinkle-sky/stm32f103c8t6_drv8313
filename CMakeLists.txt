@@ -32,6 +32,9 @@ string(REPLACE "${CMAKE_SOURCE_DIR}/STM32F103xx_FLASH.ld"
 # 'stm32cubemx' INTERFACE library that 'app' depends on.
 add_subdirectory(firmware)
 
+# Custom drivers (static libraries, e.g. motor_ctrl)
+add_subdirectory(drivers)
+
 # Application layer (static library)
 add_subdirectory(application)
 
@@ -43,4 +46,4 @@ add_subdirectory(application)
 #
 # NOTE: Must use plain signature — CubeMX-generated cmake/stm32cubemx
 # also uses plain target_link_libraries, and CMake forbids mixing styles.
-target_link_libraries(firmware app)
+target_link_libraries(firmware app m)

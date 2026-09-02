@@ -18,6 +18,8 @@ target_include_directories(app PUBLIC
 
 # Link against the STM32CubeMX interface library for HAL/CMSIS headers.
 # This target is defined in firmware/cmake/stm32cubemx/CMakeLists.txt.
+# motor_ctrl provides the spwm_* API used by app.c.
 target_link_libraries(app PUBLIC
     stm32cubemx
+    motor_ctrl
 )
