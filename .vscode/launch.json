@@ -15,6 +15,21 @@
             ],
             "runToEntryPoint": "main",
             "showDevDebugOutput": "none"
+        },
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "./build/Debug/firmware/firmware.elf",
+            "name": "Debug (DAP-Link + OpenOCD)",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "serverpath": "openocd",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/stm32f1x.cfg"
+            ],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none"
         }
     ]
 }

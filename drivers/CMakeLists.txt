@@ -7,6 +7,7 @@
 #
 
 add_subdirectory(motor_ctrl)
+add_subdirectory(as5600)
 
 # Placeholder modules — uncomment when sources are added:
 # add_subdirectory(pid)

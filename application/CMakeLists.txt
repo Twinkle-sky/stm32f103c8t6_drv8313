@@ -22,4 +22,5 @@ target_include_directories(app PUBLIC
 target_link_libraries(app PUBLIC
     stm32cubemx
     motor_ctrl
+    as5600
 )
