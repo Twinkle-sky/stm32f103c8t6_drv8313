@@ -33,7 +33,10 @@
 extern TIM_HandleTypeDef htim2;   /* CubeMX 生成，三相 PWM 载波 */
 
 /* ============================ 参数宏 ============================ */
-#define PWM_PERIOD     3600.0f   /* TIM2 ARR = 3600-1（中心对齐 10kHz），与 CubeMX 一致 */
+#define PWM_PERIOD     1800.0f   /* TIM2 ARR = 1800，中心对齐 → PWM = 72MHz/(2×1800) = 20kHz，
+                                  * 与 CubeMX 里 TIM2.Period 一致 */
+#define ADC_TRIG_PULSE 1700U     /* TIM2 CH2 比较值：ARR - 100，用作 ADC 注入触发
+                                  * （小 < ARR，否则 OC2REF 恒高触发不了） */
 #define VM             12.4f     /* 母线电压：USB 5V 经 MT3608 升压 ≈12.4V，实测后修正 */
 #define TICK_FREQ      1000.0f   /* TIM3 中断频率：72MHz/72/1000 = 1kHz，须与 CubeMX 一致 */
 #define POLE_PAIRS     7.0f      /* 电机极对数：spwm_start/spwm_set_speed 参数为机械
@@ -68,7 +71,20 @@ void spwm_init(void)
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3, (uint32_t)(PWM_PERIOD * 0.5f));
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (uint32_t)(PWM_PERIOD * 0.5f));
 
+    /* ---- TIM2 CH2：ADC 注入专用触发通道（TRGO = OC2REF）----
+     * 最大值必须 < ARR(=1800)：中心对齐下 CNT 最大就是 ARR，
+     * CCR2 >= ARR+1 时 PWM1 的 CNT<CCR2 恒成立，OC2REF 恒为高，一次都不触发。
+     * 当前值 1700 = ARR - 100，即采样点在 CNT=ARR 顶点之后 100 个 tick。
+     * 必须与 tim.c / firmware.ioc 里 TIM2 Pulse-PWM Generation2 No Output 一致。 */
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, ADC_TRIG_PULSE);
+
+    /* 手动产生一次更新事件，把上面四个 CCR 从预装载寄存器刷进影子寄存器，
+     * 不用等计数器自然跑到第一个 UEV（CMRx 的 OCxPE 是 HAL 默认打开的）。 */
+    // SET_BIT(htim2.Instance->EGR, TIM_EGR_UG);
+
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);   /* PA0 → IN1 */
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);   /* 仅开 CC2E，PA1 未配 AF 故不输出引脚，
+                                                 * OC2REF 内部送给 TRGO 触发 ADC */
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);   /* PA2 → IN2 */
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);   /* PA3 → IN3 */
 }
@@ -154,14 +170,16 @@ void spwm_tick(void)
     float s_w = sinf(theta_cmd + TWO_PI_3);     /* W 相：θ + 120°   */
 
     /* ---- 3. 写占空比：duty = (0.5 + k·sinθ)·ARR ----
-     * 临界区保护：三相必须同一时刻更新，否则中断嵌套/主循环打断
-     * 会造成两相瞬间不对称、电流毛刺 */
-    __disable_irq();
+     * 不需要关中断做临界区保护：HAL_TIM_PWM_ConfigChannel() 已经给 CH1~CH4
+     * 置了 CCMRx 的 OCxPE 位，写 CCRx 只是写预装载寄存器，要等下一个 UEV
+     * 才一起传送到影子寄存器 —— 三相比值天然在同一个计数边界生效，
+     * 不存在"写到一半被打断"的问题。
+     * 反而关中断会阻塞 ADC 注入完成中断（20kHz），给采样时刻引入抖动，
+     * 所以这里直接写即可。（CH2 是 ADC 触发通道，任何情况下都别写它的 CCR。） */
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1,
         (uint32_t)((0.5f + k_mod * s_u) * PWM_PERIOD));
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_3,
         (uint32_t)((0.5f + k_mod * s_v) * PWM_PERIOD));
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4,
         (uint32_t)((0.5f + k_mod * s_w) * PWM_PERIOD));
-    __enable_irq();
 }
